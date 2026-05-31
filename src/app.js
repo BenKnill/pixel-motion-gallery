@@ -4,7 +4,7 @@ const count = document.querySelector("#gallery-count");
 const intro = document.querySelector("#gallery-intro");
 const modeButtons = [...document.querySelectorAll(".mode-button")];
 
-let mode = "tap";
+let mode = "loop";
 
 const response = await fetch("./gallery.json", { cache: "no-store" }).catch(() => null);
 const items = response?.ok ? await response.json() : [];
@@ -18,6 +18,10 @@ emptyState.hidden = items.length !== 0;
 
 for (const item of items) {
   gallery.append(renderTile(item));
+}
+
+if (mode === "loop") {
+  document.querySelectorAll(".tile[data-motion='true']").forEach((tile) => play(tile, true));
 }
 
 modeButtons.forEach((button) => {

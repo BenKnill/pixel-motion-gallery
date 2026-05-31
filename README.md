@@ -27,6 +27,8 @@ On macOS, Android phones do not usually appear as normal Finder drives. Use Open
 
 Keep the phone unlocked and set USB Preferences to **File transfer / Android Auto**.
 
+On this Pixel/Mac setup, USB import worked best after a clean unplug/replug with transfer apps closed. The phone may need **USB controlled by connected device** for the computer to host the transfer session.
+
 ## Build Locally
 
 ```sh
