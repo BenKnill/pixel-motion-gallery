@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pixel Motion Gallery</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Pixel Motion Gallery</h1>
+        <p id="gallery-count">Loading Motion Photos...</p>
+        <p id="gallery-intro" class="intro"></p>
+      </div>
+      <div class="view-controls" aria-label="Playback mode">
+        <button type="button" class="mode-button active" data-mode="tap">Tap</button>
+        <button type="button" class="mode-button" data-mode="hover">Hover</button>
+        <button type="button" class="mode-button" data-mode="loop">Loop</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="gallery" class="gallery" aria-live="polite"></section>
+      <section id="empty-state" class="empty-state" hidden>
+        <h2>No photos yet</h2>
+        <p>Add approved Pixel Motion Photo files to <code>curated/</code>, run <code>npm run build</code>, then publish the generated <code>site/</code> folder.</p>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
