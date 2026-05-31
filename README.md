@@ -1,5 +1,7 @@
 # Pixel Motion Gallery
 
+Live site: https://benknill.github.io/pixel-motion-gallery/
+
 This is a static GitHub Pages gallery for Google Pixel Motion Photos.
 
 Pixel Motion Photos are not plain videos. Android's Motion Photo format stores a still image plus an appended short video in one file, with XMP metadata saying where the video starts. This project extracts the motion part during the build so a browser can play it, but the public page presents each item as one Motion Photo: still first, motion in the same frame, then back to the still.
