@@ -5,6 +5,10 @@ const intro = document.querySelector("#gallery-intro");
 const modeButtons = [...document.querySelectorAll(".mode-button")];
 
 let mode = "loop";
+const loopTilesInView = new Set();
+const loopObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver(handleLoopVisibility, { rootMargin: "260px 0px", threshold: 0.08 })
+  : null;
 
 const response = await fetch("./gallery.json", { cache: "no-store" }).catch(() => null);
 const items = response?.ok ? await response.json() : [];
@@ -17,22 +21,18 @@ intro.hidden = !intro.textContent;
 emptyState.hidden = items.length !== 0;
 
 for (const item of items) {
-  gallery.append(renderTile(item));
+  const tile = renderTile(item);
+  gallery.append(tile);
+  registerLoopTile(tile);
 }
 
-if (mode === "loop") {
-  document.querySelectorAll(".tile[data-motion='true']").forEach((tile) => play(tile, true));
-}
+syncPlayback();
 
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     mode = button.dataset.mode;
     modeButtons.forEach((other) => other.classList.toggle("active", other === button));
-    document.querySelectorAll(".tile").forEach((tile) => stop(tile));
-
-    if (mode === "loop") {
-      document.querySelectorAll(".tile[data-motion='true']").forEach((tile) => play(tile, true));
-    }
+    syncPlayback();
   });
 });
 
@@ -61,9 +61,14 @@ function renderTile(item) {
     video.src = item.motion;
     video.muted = true;
     video.playsInline = true;
-    video.preload = "metadata";
+    video.setAttribute("webkit-playsinline", "");
+    video.poster = item.still;
+    video.preload = "none";
     video.loop = false;
-    video.addEventListener("ended", () => stop(tile));
+    video.disablePictureInPicture = true;
+    video.addEventListener("ended", () => {
+      if (mode !== "loop") stop(tile);
+    });
     frame.append(video);
 
     const badge = document.createElement("span");
@@ -92,6 +97,39 @@ function renderTile(item) {
   return tile;
 }
 
+function registerLoopTile(tile) {
+  if (tile.dataset.motion !== "true") return;
+
+  if (loopObserver) {
+    loopObserver.observe(tile);
+  } else {
+    loopTilesInView.add(tile);
+  }
+}
+
+function handleLoopVisibility(entries) {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      loopTilesInView.add(entry.target);
+    } else {
+      loopTilesInView.delete(entry.target);
+    }
+  }
+
+  syncPlayback();
+}
+
+function syncPlayback() {
+  document.querySelectorAll(".tile").forEach((tile) => {
+    const shouldLoop = mode === "loop" && tile.dataset.motion === "true" && loopTilesInView.has(tile);
+    if (shouldLoop) {
+      play(tile, true);
+    } else {
+      stop(tile, { reset: mode !== "loop" });
+    }
+  });
+}
+
 function toggle(tile) {
   if (tile.classList.contains("playing")) {
     stop(tile);
@@ -103,21 +141,27 @@ function toggle(tile) {
 function play(tile, loopMode = false) {
   const video = tile.querySelector("video");
   if (!video) return;
+  if (video.preload !== "auto") {
+    video.preload = "auto";
+    video.load();
+  }
   video.loop = loopMode;
   tile.classList.toggle("looping", loopMode);
   tile.classList.add("playing");
-  video.play().catch(() => {
+  if (!video.paused && !video.ended) return;
+  void video.play().catch(() => {
     tile.classList.remove("playing", "looping");
   });
 }
 
-function stop(tile) {
+function stop(tile, options = {}) {
+  const { reset = true } = options;
   const video = tile.querySelector("video");
   tile.classList.remove("playing", "looping");
   if (!video) return;
   video.pause();
   video.loop = false;
-  video.currentTime = 0;
+  if (reset) video.currentTime = 0;
 }
 
 function escapeHtml(value) {
